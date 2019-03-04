@@ -168,6 +168,9 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
                 PMT.REVOCATION: self._handle_revocation,
             },
         }
+        self.CTRL_PLD_CLASS_FAST_MAP = {
+            PayloadClass.IFID: {PayloadClass.IFID: self.try_fast_handle_ifid_packet},
+        }
         self.SCMP_PLD_CLASS_MAP = {
             SCMPClass.PATH: {
                 SCMPPathClass.REVOKED_IF: self._handle_scmp_revocation,
@@ -411,6 +414,32 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
             return None
         pcb.add_asm(asm, ProtoSignType.ED25519, self.addr.isd_as.pack())
         return pcb
+
+    def try_fast_handle_ifid_packet(self, cpld, meta):
+        """
+        Update the last_updated timestamp for the corresponding interface.
+        If the interface is not currently active (i.e. it will be activated by
+        this IFID packet), the packet will NOT be handled (returns False).
+
+        Note: updating the timestamp is very cheap (same order of magnitude as
+        enqueuing the packet for asynchronous processing), so it can safely be
+        done on the packet-receive thread.
+        This helps to process IFID packets for active interfaces in time, as it
+        and avoids the problem that interfaces time out because the IFIDs are
+        stuck in a long packet processing queue (behind PCBs).
+        For inactive interfaces, the processing of the IFIDs is more work as
+        state updates will be sent out. Also, this is not time-critical as the
+        interface is, well, down.
+
+        :returns: has the packet been handled
+        """
+        pld = cpld.union
+        assert isinstance(pld, IFIDPayload), type(pld)
+        ifid = meta.pkt.path.get_hof().ingress_if
+        with self.ifid_state_lock:
+            if ifid not in self.ifid_state:
+                raise SCIONKeyError("Invalid IF %d in IFIDPayload" % ifid)
+            return self.ifid_state[ifid].update_active()
 
     def handle_ifid_packet(self, cpld, meta):
         """

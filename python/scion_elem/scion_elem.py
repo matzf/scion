@@ -168,6 +168,7 @@ class SCIONElement(object):
         self._labels = {"server_id": self.id, "isd_as": str(self.topology.isd_as)}
         # Must be over-ridden by child classes:
         self.CTRL_PLD_CLASS_MAP = {}
+        self.CTRL_PLD_CLASS_FAST_MAP = {}
         self.SCMP_PLD_CLASS_MAP = {}
         self.public = public
         self.bind = bind
@@ -746,6 +747,17 @@ class SCIONElement(object):
             logging.error("%s control payload type not supported: %s\n%s", pclass, ptype, msg)
         return None
 
+    def _get_fast_ctrl_handler(self, msg):
+        """
+        Return optional fast path handler.
+        """
+        pclass = msg.type()
+        type_map = self.CTRL_PLD_CLASS_MAP.get(pclass)
+        if not type_map:
+            return None
+        ptype = msg.inner_type()
+        return type_map.get(ptype)
+
     def _get_scmp_handler(self, pkt):
         scmp = pkt.l4_hdr
         try:
@@ -1049,7 +1061,21 @@ class SCIONElement(object):
                 if self._labels:
                     CONNECTED_TO_DISPATCHER.labels(**self._labels).set(0)
             return
-        self.packet_put(packet, addr, sock)
+
+        msg, meta = self._get_msg_meta(packet, addr, sock)
+        if msg is None:
+            return
+
+        # Try to handle immediately if supported for this message type:
+        handled = False
+        if isinstance(meta, UDPMetadata):
+            fast_handler = self._get_fast_ctrl_handler(msg)
+            if fast_handler:
+                handled = fast_handler(msg, meta)
+
+        # If no fast-path handler for this message OR handler explicitly skipped, enqueue:
+        if not handled:
+            self._in_buf_put((msg, meta))
 
     def packet_recv(self):
         """
