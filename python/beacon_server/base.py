@@ -436,7 +436,10 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
         pld = cpld.union
         assert isinstance(pld, IFIDPayload), type(pld)
         ifid = meta.pkt.path.get_hof().ingress_if
-        # Note: No self.ifid_state_lock; the state will not change
+        # Note: No self.ifid_state_lock; the lock is to guard against concurrent
+        # changes of the state of interfaces and this won't change the state.
+        # Also, no entries are added to or removed from ifid_state after
+        # startup.
         if ifid not in self.ifid_state:
             raise SCIONKeyError("Invalid IF %d in IFIDPayload" % ifid)
         return self.ifid_state[ifid].update_active()
