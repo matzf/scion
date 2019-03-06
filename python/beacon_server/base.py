@@ -436,10 +436,10 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
         pld = cpld.union
         assert isinstance(pld, IFIDPayload), type(pld)
         ifid = meta.pkt.path.get_hof().ingress_if
-        with self.ifid_state_lock:
-            if ifid not in self.ifid_state:
-                raise SCIONKeyError("Invalid IF %d in IFIDPayload" % ifid)
-            return self.ifid_state[ifid].update_active()
+        # Note: No self.ifid_state_lock; the state will not change
+        if ifid not in self.ifid_state:
+            raise SCIONKeyError("Invalid IF %d in IFIDPayload" % ifid)
+        return self.ifid_state[ifid].update_active()
 
     def handle_ifid_packet(self, cpld, meta):
         """
