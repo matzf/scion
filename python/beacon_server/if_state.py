@@ -64,7 +64,7 @@ class InterfaceState(object):
         """
         with self._lock:
             curr_time = time.time()
-            if self._state != self.ACTIVE:
+            if self._state == self.ACTIVE:
                 self.last_updated = curr_time
                 return True
             return False

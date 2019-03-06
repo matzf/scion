@@ -752,7 +752,7 @@ class SCIONElement(object):
         Return optional fast path handler.
         """
         pclass = msg.type()
-        type_map = self.CTRL_PLD_CLASS_MAP.get(pclass)
+        type_map = self.CTRL_PLD_CLASS_FAST_MAP.get(pclass)
         if not type_map:
             return None
         ptype = msg.inner_type()
