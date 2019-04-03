@@ -70,6 +70,7 @@ from lib.packet.pcb import (
     PCBMarking,
 )
 from lib.packet.proto_sign import ProtoSignType
+from lib.packet.scion import SCIONL4Packet
 from lib.packet.scion_addr import ISD_AS
 from lib.packet.signed_util import DefaultSignSrc
 from lib.packet.svc import SVCType
@@ -303,8 +304,11 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
             logging.debug("Segment dropped due to looping: %s" %
                           pcb.short_desc())
             return
-        seg_meta = PathSegMeta(pcb, self.continue_seg_processing, meta)
-        self._process_path_seg(seg_meta, cpld.req_id)
+
+        handled = self._maybe_handle_unverified_beacon(pcb)
+        if not handled:
+            seg_meta = PathSegMeta(pcb, self.continue_seg_processing, meta)
+            self._process_path_seg(seg_meta, cpld.req_id)
 
     def continue_seg_processing(self, seg_meta):
         """
@@ -415,7 +419,7 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
         pcb.add_asm(asm, ProtoSignType.ED25519, self.addr.isd_as.pack())
         return pcb
 
-    def try_fast_handle_ifid_packet(self, cpld, meta):
+    def try_fast_handle_ifid_packet(self, pkt):
         """
         Update the last_updated timestamp for the corresponding interface.
         If the interface is not currently active (i.e. it will be activated by
@@ -433,16 +437,20 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
 
         :returns: has the packet been handled
         """
-        pld = cpld.union
-        assert isinstance(pld, IFIDPayload), type(pld)
-        ifid = meta.pkt.path.get_hof().ingress_if
+        assert isinstance(pkt, SCIONL4Packet), type(pkt)
+        ifid = pkt.path.get_hof().ingress_if
         # Note: No self.ifid_state_lock; the lock is to guard against concurrent
         # changes of the state of interfaces and this won't change the state.
         # Also, no entries are added to or removed from ifid_state after
         # startup.
         if ifid not in self.ifid_state:
             raise SCIONKeyError("Invalid IF %d in IFIDPayload" % ifid)
-        return self.ifid_state[ifid].update_active()
+        updated = self.ifid_state[ifid].update_active()
+        if updated:
+            logging.debug("IF %i updated", ifid)
+        else:
+            logging.debug("IF %i not active", ifid)
+        return updated
 
     def handle_ifid_packet(self, cpld, meta):
         """
@@ -567,6 +575,9 @@ class BeaconServer(SCIONElement, metaclass=ABCMeta):
         :type pcb: PathSegment
         """
         raise NotImplementedError
+
+    def _maybe_handle_unverified_beacon(self, pcb):
+        return False
 
     def process_rev_objects(self, rev_infos):
         """

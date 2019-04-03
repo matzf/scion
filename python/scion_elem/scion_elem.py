@@ -123,6 +123,42 @@ MAX_QUEUE = 5000
 API_TOUT = 1
 
 
+class Ticker(object):
+    # Dumb timer/counter obj. Poor mans profiler
+
+    REPORT_FREQ = 100
+
+    def __init__(self, name):
+        self.name = name
+        self.num = 0
+        self.tacc = 0
+        self.ttot = 0
+        self.tmax = 0
+        self.t0 = None
+
+    def tic(self):
+        assert self.t0 is None
+        self.num += 1
+        self.t0 = time.time()
+
+    def toc(self):
+        t1 = time.time()
+        td = 1000.0 * (t1 - self.t0)
+        self.t0 = None
+        self.tacc += td
+        self.tmax = max(self.tmax, td)
+        if self.num % self.REPORT_FREQ == 0:
+            self.ttot += self.tacc
+            self._report()
+            self.tacc = 0
+            self.tmax = 0
+
+    def _report(self):
+        logging.debug("ticker:%s: %i, avg: %f, max: %f, avg (tot): %f, acc: %f, tot: %f [ms]",
+                      self.name, self.num, self.tacc/self.REPORT_FREQ, self.tmax,
+                      self.ttot/self.num, self.tacc, self.ttot)
+
+
 class SCIONElement(object):
     """
     Base class for the different kind of servers the SCION infrastructure
@@ -210,6 +246,9 @@ class SCIONElement(object):
             self._init_metrics()
         self._setup_sockets(True)
         lib_sciond.init(sciond_path)
+
+        self.ticker_fast_handler = Ticker("fast_handler")
+        self.ticker_parse = Ticker("parse")
 
     def _load_as_conf(self):
         return Config.from_file(os.path.join(self.conf_dir, AS_CONF_FILE))
@@ -720,7 +759,7 @@ class SCIONElement(object):
                 logging.error("Could not get cert chain %sv%s" % (asm.isd_as(), asm.p.certVer))
                 continue
             self._verify_exp_time(exp_time, chain)
-            verify_chain_trc(cert_ia, chain, trc)
+            #verify_chain_trc(cert_ia, chain, trc)
             seg.verify(chain.as_cert.subject_sig_key_raw, i)
 
     def _verify_exp_time(self, exp_time, chain):
@@ -790,6 +829,11 @@ class SCIONElement(object):
             return None
         except SCIONChecksumFailed:
             logging.debug("Dropping packet due to failed checksum:\n%s", pkt)
+        try:
+            msg = pkt.parse_payload()
+        except SCIONParseError:
+            logging.error("Cannot parse payload\n  Error: %s\n  Pkt: %s", e, pkt)
+            return None
         return pkt
 
     def _scmp_parse_error(self, packet, e):
@@ -964,29 +1008,19 @@ class SCIONElement(object):
         finally:
             self.stop()
 
-    def packet_put(self, packet, addr, sock):
-        """
-        Try to put incoming packet in queue
-        If queue is full, drop oldest packet in queue
-        """
-        msg, meta = self._get_msg_meta(packet, addr, sock)
-        if msg is None:
-            return
-        self._in_buf_put((msg, meta))
-
-    def _in_buf_put(self, item):
+    def _in_buf_put(self, pkt):
         dropped = 0
         while True:
             try:
-                self._in_buf.put(item, block=False)
+                self._in_buf.put(pkt, block=False)
                 if self._labels:
-                    PKT_BUF_BYTES.labels(**self._labels).inc(len(item[0]))
+                    PKT_BUF_BYTES.labels(**self._labels).inc(len(pkt))
             except queue.Full:
-                msg, _ = self._in_buf.get_nowait()
+                pkt = self._in_buf.get_nowait()
                 dropped += 1
                 if self._labels:
                     PKTS_DROPPED_TOTAL.labels(**self._labels).inc()
-                    PKT_BUF_BYTES.labels(**self._labels).dec(len(msg))
+                    PKT_BUF_BYTES.labels(**self._labels).dec(len(pkt))
             else:
                 break
             finally:
@@ -997,11 +1031,7 @@ class SCIONElement(object):
             logging.warning("%d packet(s) dropped (%d total dropped so far)",
                             dropped, self.total_dropped)
 
-    def _get_msg_meta(self, packet, addr, sock):
-        pkt = self._parse_packet(packet)
-        if not pkt:
-            logging.error("Cannot parse packet:\n%s" % packet)
-            return None, None
+    def _get_msg_meta(self, pkt):
         # Create metadata:
         rev_pkt = pkt.reversed_copy()
         # Skip OneHopPathExt (if exists)
@@ -1023,16 +1053,11 @@ class SCIONElement(object):
 
         else:
             logging.error("Cannot create meta for: %s" % pkt)
-            return None, None
+            return None
 
         # FIXME(PSz): for now it is needed by SIBRA service.
         meta.pkt = pkt
-        try:
-            pkt.parse_payload()
-        except SCIONParseError as e:
-            logging.error("Cannot parse payload\n  Error: %s\n  Pkt: %s", e, pkt)
-            return None, meta
-        return pkt.get_payload(), meta
+        return meta
 
     def handle_accept(self, sock):
         """
@@ -1062,30 +1087,45 @@ class SCIONElement(object):
                     CONNECTED_TO_DISPATCHER.labels(**self._labels).set(0)
             return
 
-        msg, meta = self._get_msg_meta(packet, addr, sock)
-        if msg is None:
-            return
 
         # Try to handle immediately if supported for this message type:
-        handled = False
-        if isinstance(meta, UDPMetadata):
-            fast_handler = self._get_fast_ctrl_handler(msg)
-            if fast_handler:
-                handled = fast_handler(msg, meta)
+        if len(packet) < 150:
+            handled = False
+            self.ticker_parse.tic()
+            pkt = self._parse_packet(packet)
+            self.ticker_parse.toc()
+            if pkt is None:
+                return
+            msg = pkt.get_payload()
+            if isinstance(msg, CtrlPayload):
+                fast_handler = self._get_fast_ctrl_handler(msg)
+                if fast_handler:
+                    logging.debug("fast handler found: pkt len: %i", len(packet))
+                    self.ticker_fast_handler.tic()
+                    handled = fast_handler(pkt)
+                    self.ticker_fast_handler.toc()
 
-        # If no fast-path handler for this message OR handler explicitly skipped, enqueue:
-        if not handled:
-            self._in_buf_put((msg, meta))
+            # If no fast-path handler for this message OR handler explicitly skipped, enqueue:
+            if not handled:
+                logging.debug("no fast handler found: pkt len: %i", len(packet))
+                self._in_buf_put(pkt)
+        else:
+            logging.debug("not parsed: pkt len: %i", len(packet))
+            self._in_buf_put(packet)
 
     def packet_recv(self):
         """
         Read packets from sockets, and put them into a :class:`queue.Queue`.
         """
+        t = Ticker("packet_recv")
         while self.run_flag.is_set():
             if not self._udp_sock:
                 self._setup_sockets(False)
             for sock, callback in self._socks.select_(timeout=0.1):
+                t.tic()
                 callback(sock)
+                t.toc()
+
         self._socks.close()
         self.stopped_flag.set()
 
@@ -1095,7 +1135,13 @@ class SCIONElement(object):
         """
         while self.run_flag.is_set():
             try:
-                msg, meta = self._in_buf.get(timeout=1.0)
+                pkt = self._in_buf.get(timeout=1.0)
+                if isinstance(pkt, bytes):
+                    pkt = self._parse_packet(pkt)
+                if pkt is None:
+                    continue
+                msg = pkt.get_payload()
+                meta = self._get_msg_meta(pkt)
                 if self._labels:
                     PKT_BUF_BYTES.labels(**self._labels).dec(len(msg))
                     PKT_BUF_TOTAL.labels(**self._labels).set(self._in_buf.qsize())
