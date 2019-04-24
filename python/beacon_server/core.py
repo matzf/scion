@@ -17,6 +17,7 @@
 """
 # Stdlib
 import logging
+import itertools
 from collections import defaultdict
 
 # SCION
@@ -142,25 +143,18 @@ class CoreBeaconServer(BeaconServer):
         # of hops.
         isd_ases = [asm.isd_as() for asm in pcb.iter_asms()]
         isd_ases.append(self.addr.isd_as)
-        # If a destination ISD-AS is specified, add that as well. Used to decide
-        # when to propagate.
         if dst_ia:
             isd_ases.append(dst_ia)
-        isds = set()
-        last_isd = 0
-        for isd_as in isd_ases:
-            if isd_ases.count(isd_as) > 1:
-                # This ISD-AS has been seen before
+
+        if len(isd_ases) != len(set(isd_ases)):
+            return False
+
+        if self.filter_isd_loops:
+            isds = [isd_as[0] for isd_as in isd_ases]
+            # get sequence of isds traversed by removing consecutive duplicate entries:
+            isd_seq = [k for k, _ in itertools.groupby(isds)]
+            if len(isd_seq) != len(set(isd_seq)):
                 return False
-            curr_isd = isd_as[0]
-            if curr_isd == last_isd:
-                continue
-            # Switched to a new ISD
-            last_isd = curr_isd
-            if self.filter_isd_loops and curr_isd in isds:
-                # This ISD has been seen before
-                return False
-            isds.add(curr_isd)
         return True
 
     def _handle_verified_beacon(self, pcb):
@@ -172,6 +166,27 @@ class CoreBeaconServer(BeaconServer):
         """
         with self._rev_seg_lock:
             self.core_beacons[pcb.first_ia()].add_segment(pcb)
+
+    def _maybe_handle_unverified_beacon(self, pcb):
+        with self._rev_seg_lock:
+            candidate_set = self.core_beacons[pcb.first_ia()]
+
+            if candidate_set.candidates:
+                worst = candidate_set.candidates[-1]
+                if worst.hops_length + 2 < pcb.get_n_hops():
+                    logging.debug("PCB looks much worse than worst current candidate:\n worst: [%s]\n new: [%s]",
+                                  worst.pcb.short_desc(),
+                                  pcb.short_desc())
+                    return True
+
+            # Check if this PCB is already here and can be updated without verifying
+            pcb_hash = pcb.get_hops_hash(hex=True)
+            for candidate in candidate_set.candidates:
+                if candidate.id == pcb_hash:
+                    logging.debug("PCB updated without verification")
+                    candidate.update(pcb)
+                    return True
+        return False
 
     def register_core_segments(self):
         """
