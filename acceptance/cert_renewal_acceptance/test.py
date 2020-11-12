@@ -163,7 +163,8 @@ class TestRun(CmdBase):
 
         for i in range(len(args)):
             if isinstance(args[i], LocalPath):
-                args[i] = str(args[i].relative_to(local.path('.')))
+                p = args[i]  # type: LocalPath
+                args[i] = str(p.relative_to(local.path('.')))
 
         logger.info('Requesting certificate chain renewal: %s' % rel(chain))
         logger.info(self.scion.execute(isd_as, './bin/scion-pki', 'certs', 'renew', *args))

@@ -145,8 +145,8 @@ class PrometheusGenerator(object):
             return
         targets_path = os.path.join(self.args.output_dir, "dispatcher",
                                     PrometheusGenerator.PROM_DIR, "disp.yml")
-        target_config = [{'targets': [prom_addr_dispatcher(False, None, None,
-                                                           DISP_PROM_PORT, None)]}]
+        target_config = [{'targets': [prom_addr_dispatcher(False, None, self.args.networks,
+                                                           DISP_PROM_PORT, '')]}]
         write_file(targets_path, yaml.dump(target_config, default_flow_style=False))
 
     def _write_dc_file(self):

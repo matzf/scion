@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from typing import Any, Dict
+from typing import Dict, Union, Any
 
 from acceptance.common.scion import (
     merge_dict,
@@ -41,7 +41,8 @@ class MergeDictTestCase(unittest.TestCase):
         actual = self._orig()
         merge_dict(path_to_dict('log.file', 'disable'), actual)
         expected = self._orig()
-        expected['log']['file'] = 'disable'
+        log_dict = expected['log']  # type: Dict[str, Any]
+        log_dict['file'] = 'disable'
         self.assertEqual(actual, expected, "file dict not overwritten")
 
     @staticmethod

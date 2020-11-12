@@ -48,11 +48,13 @@ class TestWriteFile(object):
         # Call
         write_file("File_Path", "Text")
         # Tests
+        # pytype: disable=attribute-error
         dirname.assert_called_once_with("File_Path")
         makedirs.assert_called_once_with("Dir_Name", exist_ok=True)
         builtins.open.assert_called_once_with("File_Path.new", 'w')
         builtins.open.return_value.write.assert_called_once_with("Text")
         rename.assert_called_once_with("File_Path.new", "File_Path")
+        # pytype: enable=attribute-error
 
     @patch("lib.util.os.makedirs", autospec=True)
     def test_mkdir_error(self, mkdir):

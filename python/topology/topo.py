@@ -353,7 +353,7 @@ class TopoGenerator(object):
             'ctrl_addr': join_host_port(self._reg_addr(topo_id, reg_id, addr_type).ip, port),
             'data_addr': join_host_port(self._reg_addr(topo_id, reg_id, addr_type).ip, 30056),
         }
-        self.topo_dicts[topo_id]['sigs'][elem_id] = d
+        self.topo_dicts[topo_id]['sigs'][elem_id] = d  # pytype: disable=unsupported-operands
 
     def _generate_as_list(self, topo_id, as_conf):
         if as_conf.get('core', False):

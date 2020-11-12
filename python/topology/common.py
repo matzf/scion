@@ -124,7 +124,7 @@ def sciond_ip(docker, topo_id, networks: Mapping[IPNetwork, NetworkDescription])
 
 def prom_addr_dispatcher(docker, topo_id,
                          networks: Mapping[IPNetwork, NetworkDescription],
-                         port, name):
+                         port: int, name: str):
     if not docker:
         return "[127.0.0.1]:%s" % port
     target_name = ''

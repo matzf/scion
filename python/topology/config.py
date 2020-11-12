@@ -78,6 +78,8 @@ class ConfigGenerator(object):
             sys.exit(1)
         self.default_mtu = None
         self._read_defaults(self.args.network)
+        self.networks = {}
+        self.all_networks = {}
 
     def _read_defaults(self, network):
         """
