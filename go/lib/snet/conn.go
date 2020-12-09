@@ -19,7 +19,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/scionproto/scion/go/lib/ctrl/path_mgmt"
 	"github.com/scionproto/scion/go/lib/slayers"
 )
 
@@ -30,11 +29,10 @@ const (
 
 type OpError struct {
 	typeCode slayers.SCMPTypeCode
-	revInfo  *path_mgmt.RevInfo
 }
 
-func (e *OpError) RevInfo() *path_mgmt.RevInfo {
-	return e.revInfo
+func (e *OpError) RevInfo() error {
+	return nil
 }
 
 func (e *OpError) Error() string {

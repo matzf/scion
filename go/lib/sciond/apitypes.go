@@ -20,7 +20,6 @@ import (
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/serrors"
 	"github.com/scionproto/scion/go/lib/snet"
 	"github.com/scionproto/scion/go/lib/topology"
@@ -52,10 +51,6 @@ type RevHandler struct {
 }
 
 func (h RevHandler) RevokeRaw(ctx context.Context, rawSRevInfo common.RawBytes) {
-	err := h.Connector.RevNotificationFromRaw(ctx, rawSRevInfo)
-	if err != nil {
-		log.FromCtx(ctx).Error("Revocation notification to sciond failed", "err", err)
-	}
 }
 
 // TopoQuerier can be used to get topology information from sciond.

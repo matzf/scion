@@ -23,7 +23,6 @@ import (
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/ctrl/path_mgmt"
 	"github.com/scionproto/scion/go/lib/serrors"
 	"github.com/scionproto/scion/go/lib/slayers/path/scion"
 	"github.com/scionproto/scion/go/lib/snet"
@@ -144,32 +143,6 @@ func (c grpcConn) SVCInfo(ctx context.Context, _ []addr.HostSVC) (map[addr.HostS
 	}
 	c.metrics.incServcies(nil)
 	return result, nil
-}
-
-func (c grpcConn) RevNotificationFromRaw(ctx context.Context, b []byte) error {
-	// Extract information from notification
-	sRevInfo, err := path_mgmt.NewSignedRevInfoFromRaw(b)
-	if err != nil {
-		return err
-	}
-	return c.RevNotification(ctx, sRevInfo)
-}
-
-func (c grpcConn) RevNotification(ctx context.Context, sRevInfo *path_mgmt.SignedRevInfo) error {
-	revInfo, err := sRevInfo.RevInfo()
-	if err != nil {
-		c.metrics.incIfDown(err)
-		return serrors.WrapStr("extracting rev info", err)
-	}
-
-	client := sdpb.NewDaemonServiceClient(c.conn)
-	_, err = client.NotifyInterfaceDown(ctx, &sdpb.NotifyInterfaceDownRequest{
-		Id:    uint64(revInfo.IfID),
-		IsdAs: uint64(revInfo.RawIsdas),
-	})
-	c.metrics.incIfDown(err)
-	return err
-
 }
 
 func (c grpcConn) Close(_ context.Context) error {

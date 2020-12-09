@@ -17,17 +17,10 @@ package snet
 import (
 	"context"
 	"net"
-	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/ctrl/path_mgmt"
-	"github.com/scionproto/scion/go/lib/log"
-	"github.com/scionproto/scion/go/lib/serrors"
-	"github.com/scionproto/scion/go/lib/slayers"
-	"github.com/scionproto/scion/go/lib/snet/internal/metrics"
 	"github.com/scionproto/scion/go/lib/sock/reliable"
-	"github.com/scionproto/scion/go/lib/util"
 )
 
 // PacketDispatcherService constructs SCION sockets where applications have
@@ -95,51 +88,5 @@ type DefaultSCMPHandler struct {
 }
 
 func (h DefaultSCMPHandler) Handle(pkt *Packet) error {
-	scmp, ok := pkt.Payload.(SCMPPayload)
-	if !ok {
-		return serrors.New("scmp handler invoked with non-scmp packet", "pkt", pkt)
-	}
-	typeCode := slayers.CreateSCMPTypeCode(scmp.Type(), scmp.Code())
-	if !typeCode.InfoMsg() {
-		metrics.M.SCMPErrors().Inc()
-	}
-	switch scmp.Type() {
-	case slayers.SCMPTypeExternalInterfaceDown:
-		msg := pkt.Payload.(SCMPExternalInterfaceDown)
-		return h.handleSCMPRev(typeCode, &path_mgmt.RevInfo{
-			IfID:         common.IFIDType(msg.Interface),
-			RawIsdas:     msg.IA.IAInt(),
-			RawTimestamp: util.TimeToSecs(time.Now()),
-			RawTTL:       10,
-		})
-	case slayers.SCMPTypeInternalConnectivityDown:
-		msg := pkt.Payload.(SCMPInternalConnectivityDown)
-		return h.handleSCMPRev(typeCode, &path_mgmt.RevInfo{
-			IfID:         common.IFIDType(msg.Egress),
-			RawIsdas:     msg.IA.IAInt(),
-			RawTimestamp: util.TimeToSecs(time.Now()),
-			RawTTL:       10,
-		})
-	default:
-		// Only handle connectivity down for now
-		log.Debug("Ignoring scmp packet", "scmp", typeCode, "src", pkt.Source)
-		return nil
-	}
-}
-
-func (h *DefaultSCMPHandler) handleSCMPRev(typeCode slayers.SCMPTypeCode,
-	revInfo *path_mgmt.RevInfo) error {
-
-	sRev, err := path_mgmt.NewSignedRevInfo(revInfo)
-	if err != nil {
-		return serrors.WrapStr("creating signed rev info", err)
-	}
-	raw, err := sRev.Pack()
-	if err != nil {
-		return serrors.WrapStr("packing signed rev info", err)
-	}
-	if h.RevocationHandler != nil {
-		h.RevocationHandler.RevokeRaw(context.TODO(), raw)
-	}
-	return &OpError{typeCode: typeCode, revInfo: revInfo}
+	return nil
 }

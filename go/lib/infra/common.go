@@ -15,14 +15,12 @@
 package infra
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/ctrl/seg"
-	"github.com/scionproto/scion/go/proto"
 )
 
 const (
@@ -33,70 +31,6 @@ const (
 	// timeout if they have special requirements.
 	DefaultRPCTimeout time.Duration = 10 * time.Second
 )
-
-// Handler is implemented by objects that can handle a request coming
-// from a remote SCION network node.
-type Handler interface {
-	Handle(*Request) *HandlerResult
-}
-
-// Constructs a handler for request r. Handle() can be called on the
-// resulting object to process the message.
-type HandlerFunc func(r *Request) *HandlerResult
-
-func (f HandlerFunc) Handle(r *Request) *HandlerResult {
-	return f(r)
-}
-
-// Request describes an object received from the network that is not part of an
-// exchange initiated by the local node. A Request includes its associated
-// context.
-type Request struct {
-	// Message is the inner proto.Cerealizable message, as supported by
-	// messenger.Messenger (e.g., a *cert_mgmt.ChainReq). For information about
-	// possible messages, see the package documentation for that package.
-	Message proto.Cerealizable
-	// FullMessage is the top-level SignedCtrlPld message read from the wire
-	FullMessage proto.Cerealizable
-	// Peer is the node that sent this request
-	Peer net.Addr
-	// ID is the CtrlPld top-level ID.
-	ID uint64
-	// ctx is a server context, used in handlers when receiving messages from
-	// the network.
-	ctx context.Context
-}
-
-func NewRequest(ctx context.Context, msg, fullMsg proto.Cerealizable, peer net.Addr,
-	id uint64) *Request {
-
-	return &Request{
-		Message:     msg,
-		FullMessage: fullMsg,
-		Peer:        peer,
-		ctx:         ctx,
-		ID:          id,
-	}
-}
-
-// Context returns the request's context.
-func (r *Request) Context() context.Context {
-	return r.ctx
-}
-
-var (
-	// responseWriterKey is a context key. It can be used in SCION infra
-	// request handlers to reply to a remote request.
-	responseWriterContextKey = &contextKey{"response-writer"}
-)
-
-type contextKey struct {
-	name string
-}
-
-func (k *contextKey) String() string {
-	return "infra/messenger context value " + k.name
-}
 
 type MessageType int
 
