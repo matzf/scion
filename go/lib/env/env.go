@@ -35,7 +35,6 @@ import (
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 
 	"github.com/scionproto/scion/go/lib/config"
-	"github.com/scionproto/scion/go/lib/daemon"
 	"github.com/scionproto/scion/go/lib/fatal"
 	"github.com/scionproto/scion/go/lib/infra/modules/itopo"
 	"github.com/scionproto/scion/go/lib/log"
@@ -46,6 +45,8 @@ import (
 )
 
 const (
+	daemonDefaultAPIAddress = "127.0.0.1:30255"
+
 	// TopologyFile is the file name for the topology file.
 	TopologyFile = "topology.json"
 
@@ -143,7 +144,7 @@ type Daemon struct {
 
 func (cfg *Daemon) InitDefaults() {
 	if cfg.Address == "" {
-		cfg.Address = daemon.DefaultAPIAddress
+		cfg.Address = daemonDefaultAPIAddress
 	}
 	if cfg.InitialConnectPeriod.Duration == 0 {
 		cfg.InitialConnectPeriod.Duration = SciondInitConnectPeriod

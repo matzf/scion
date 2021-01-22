@@ -27,7 +27,6 @@ import (
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/ctrl/seg"
-	"github.com/scionproto/scion/go/lib/env"
 	"github.com/scionproto/scion/go/lib/pathdb/query"
 	"github.com/scionproto/scion/go/lib/pathdb/sqlite"
 )
@@ -42,14 +41,9 @@ func main() {
 func realMain() error {
 	filename := flag.String("db", "", "Sqlite DB file (optional)")
 	showTimestamps := flag.Bool("t", false, "Show update and expiration times")
-	version := flag.Bool("version", false, "Output version information and exit.")
 	flag.Parse()
 	var err error
 
-	if *version {
-		fmt.Print(env.VersionInfo())
-		os.Exit(0)
-	}
 	if *filename == "" {
 		*filename, err = defaultDBfilename()
 		if err != nil {

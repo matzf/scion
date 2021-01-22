@@ -18,8 +18,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/scionproto/scion/go/lib/env"
 )
 
 func newVersion() *cobra.Command {
@@ -28,7 +26,7 @@ func newVersion() *cobra.Command {
 		Use:   "version",
 		Short: "Show the scion-pki version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(env.VersionInfo())
+			fmt.Print("")
 			fmt.Printf("  PKI version:   v%d.%d.%d\n", major, minor, patch)
 		},
 	}

@@ -18,8 +18,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/scionproto/scion/go/lib/env"
 )
 
 // NewVersion creates a command that displays the SCION version information.
@@ -29,7 +27,7 @@ func NewVersion(pather Pather) *cobra.Command {
 		Short:   "Show the SCION version information",
 		Example: fmt.Sprintf("  %[1]s version", pather.CommandPath()),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(env.VersionInfo())
+			fmt.Print("")
 		},
 	}
 	return cmd
