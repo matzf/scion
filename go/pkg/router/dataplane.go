@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"hash"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
+	drkey "github.com/scionproto/scion/go/lib/drkey/fake"
 	libepic "github.com/scionproto/scion/go/lib/epic"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/metrics"
@@ -551,6 +553,7 @@ func newPacketProcessor(d *DataPlane, ingressID uint16) *scionPacketProcessor {
 		ingressID: ingressID,
 		buffer:    gopacket.NewSerializeBuffer(),
 		mac:       d.macFactory(),
+		drkey:     drkey.NewFakeDeriver(d.localIA, drkey.ProtocolSCMP),
 	}
 }
 
@@ -734,6 +737,8 @@ type scionPacketProcessor struct {
 	buffer gopacket.SerializeBuffer
 	// mac is the hasher for the MAC computation.
 	mac hash.Hash
+	// DRKey key derivation for SCMP authentication
+	drkey drkey.Deriver
 
 	// scionLayer is the SCION gopacket layer.
 	scionLayer slayers.SCION
@@ -1419,6 +1424,7 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 		}
 	}
 
+	// XXX(matzf): pre-allocate these layers somewhere
 	// create new SCION header for reply.
 	var scionL slayers.SCION
 	scionL.FlowID = p.scionLayer.FlowID
@@ -1437,19 +1443,19 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 	if err := scionL.SetSrcAddr(&net.IPAddr{IP: p.d.internalIP}); err != nil {
 		return nil, serrors.Wrap(cannotRoute, err, "details", "setting src addr")
 	}
-	scionL.NextHdr = common.L4SCMP
+
+	needsAuth := (cause != nil) // TODO(matzf): || hasValidAuth(p.e2eLayer)
+	var e2e slayers.EndToEndExtn
+	if needsAuth {
+		scionL.NextHdr = common.End2EndClass
+		e2e.NextHdr = common.L4SCMP
+	} else {
+		scionL.NextHdr = common.L4SCMP
+	}
 
 	scmpH.SetNetworkLayerForChecksum(&scionL)
 
-	if err := p.buffer.Clear(); err != nil {
-		return nil, err
-	}
-
-	sopts := gopacket.SerializeOptions{
-		ComputeChecksums: true,
-		FixLengths:       true,
-	}
-	scmpLayers := []gopacket.SerializableLayer{&scionL, scmpH, scmpP}
+	var quote []byte
 	if cause != nil {
 		// add quote for errors.
 		hdrLen := slayers.CmnHdrLen + scionL.AddrHdrLen() + scionL.Path.Len()
@@ -1461,18 +1467,48 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 		default:
 			hdrLen += 8
 		}
-		quote := p.rawPkt
+		quote = p.rawPkt
 		maxQuoteLen := slayers.MaxSCMPPacketLen - hdrLen
 		if len(quote) > maxQuoteLen {
 			quote = quote[:maxQuoteLen]
 		}
-		scmpLayers = append(scmpLayers, gopacket.Payload(quote))
 	}
+
+	sopts := gopacket.SerializeOptions{
+		ComputeChecksums: true,
+		FixLengths:       true,
+	}
+	// First write the SCMP message only without the SCION header(s) to get a buffer that we
+	// can (re-)use as input in the MAC computation.
 	// XXX(matzf) could we use iovec gather to avoid copying quote?
-	err = gopacket.SerializeLayers(p.buffer, sopts, scmpLayers...)
+	err = gopacket.SerializeLayers(p.buffer, sopts, scmpH, scmpP, gopacket.Payload(quote))
 	if err != nil {
 		return nil, serrors.Wrap(cannotRoute, err, "details", "serializing SCMP message")
 	}
+
+	// Now prepend the SCION header(s), with authenticator in E2E extensions.
+	if needsAuth {
+		// XXX(matzf) move to (?)
+		var key [drkey.KeySize]byte
+		if err := p.drkey.ASToHost(scionL.DstIA, srcA, key[:]); err != nil {
+			return nil, serrors.Wrap(cannotRoute, err, "details", "deriving key",
+				"ia", scionL.DstIA, "host", srcA)
+		}
+		mac, err := computeAuthCMAC(key[:], &scionL, p.buffer.Bytes())
+		if err != nil {
+			return nil, serrors.Wrap(cannotRoute, err, "details", "computing CMAC")
+		}
+		optAuth := slayers.NewPacketAuthenticatorOption(slayers.PacketAuthCMAC, mac)
+		e2e.Options = []*slayers.EndToEndOption{optAuth.EndToEndOption}
+
+		if err := e2e.SerializeTo(p.buffer, sopts); err != nil {
+			return nil, serrors.Wrap(cannotRoute, err, "details", "serializing SCION E2E headers")
+		}
+	}
+	if err := scionL.SerializeTo(p.buffer, sopts); err != nil {
+		return nil, serrors.Wrap(cannotRoute, err, "details", "serializing SCION header")
+	}
+
 	return p.buffer.Bytes(), scmpError{TypeCode: scmpH.TypeCode, Cause: cause}
 }
 
@@ -1547,4 +1583,46 @@ func serviceMetricLabels(localIA addr.IA, svc addr.HostSVC) prometheus.Labels {
 		"isd_as":  localIA.String(),
 		"service": svc.BaseString(),
 	}
+}
+
+// TODO put this to ... ? scrypto/spae (scion packet authenticator extension :/)
+// TODO pass buffer for result
+// XXX can we integrate this better with the layer serialization? using this is hairy...
+func computeAuthCMAC(key []byte, scionL *slayers.SCION, pld []byte) ([]byte, error) {
+	// TODO(matzf): avoid allocations, somehow?
+	// Note: InitMac is probably intended for the hop field MAC; here we _want CMAC_,
+	// change this if HF MAC is ever changed.
+	cmac, err := scrypto.InitMac(key)
+	if err != nil {
+		return nil, nil
+	}
+
+	hdr := make([]byte, scionL.AddrHdrLen()+4)
+	n, err := writePseudoHeader(hdr, scionL, len(pld))
+	if err != nil {
+		return nil, err
+	}
+	cmac.Write(hdr[:n])
+	cmac.Write(pld)
+	return cmac.Sum(nil)[:16], nil
+}
+
+// XXX(matzf) the pseudoHeader definition does NOT include the address type fields :/
+func writePseudoHeader(buf []byte, s *slayers.SCION, pldLen int) (int, error) {
+	expected := s.AddrHdrLen() + 4
+	if len(buf) < expected {
+		return 0, serrors.New("provided buffer is too small", "expected", expected,
+			"actual", len(buf))
+	}
+	err := s.SerializeAddrHdr(buf)
+	if err != nil {
+		return 0, err
+	}
+	offset := s.AddrHdrLen()
+	binary.BigEndian.PutUint16(buf[offset:], uint16(pldLen))
+	offset += 2
+	buf[offset] = 0
+	buf[offset+1] = uint8(s.NextHdr)
+	offset += 2
+	return offset, nil
 }
