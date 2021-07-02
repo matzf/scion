@@ -160,7 +160,16 @@ func SCMPExpiredHop(artifactsDir string, mac hash.Hash) runner.Case {
 	if err := sp.IncPath(); err != nil {
 		panic(err)
 	}
-	scionL.NextHdr = common.L4SCMP
+	scionL.NextHdr = common.End2EndClass
+	e2e := &slayers.EndToEndExtn{
+		Options: []*slayers.EndToEndOption{
+			slayers.NewPacketAuthenticatorOption(
+				slayers.PacketAuthCMAC,
+				make([]byte, 16),
+			).EndToEndOption,
+		},
+	}
+	e2e.NextHdr = common.L4SCMP
 	scmpH := &slayers.SCMP{
 		TypeCode: slayers.CreateSCMPTypeCode(slayers.SCMPTypeParameterProblem,
 			slayers.SCMPCodePathExpired),
@@ -174,18 +183,19 @@ func SCMPExpiredHop(artifactsDir string, mac hash.Hash) runner.Case {
 	quoteStart := 14 + 20 + 8
 	quote := input.Bytes()[quoteStart:]
 	if err := gopacket.SerializeLayers(want, options,
-		ethernet, ip, udp, scionL, scmpH, scmpP, gopacket.Payload(quote),
+		ethernet, ip, udp, scionL, e2e, scmpH, scmpP, gopacket.Payload(quote),
 	); err != nil {
 		panic(err)
 	}
 
 	return runner.Case{
-		Name:     "SCMPExpiredHop",
-		WriteTo:  "veth_131_host",
-		ReadFrom: "veth_131_host",
-		Input:    input.Bytes(),
-		Want:     want.Bytes(),
-		StoreDir: filepath.Join(artifactsDir, "SCMPExpiredHop"),
+		Name:            "SCMPExpiredHop",
+		WriteTo:         "veth_131_host",
+		ReadFrom:        "veth_131_host",
+		Input:           input.Bytes(),
+		Want:            want.Bytes(),
+		StoreDir:        filepath.Join(artifactsDir, "SCMPExpiredHop"),
+		NormalizePacket: scmpNormalizePacket,
 	}
 }
 
@@ -337,7 +347,16 @@ func SCMPExpiredHopAfterXover(artifactsDir string, mac hash.Hash) runner.Case {
 		panic(err)
 	}
 
-	scionL.NextHdr = common.L4SCMP
+	scionL.NextHdr = common.End2EndClass
+	e2e := &slayers.EndToEndExtn{
+		Options: []*slayers.EndToEndOption{
+			slayers.NewPacketAuthenticatorOption(
+				slayers.PacketAuthCMAC,
+				make([]byte, 16),
+			).EndToEndOption,
+		},
+	}
+	e2e.NextHdr = common.L4SCMP
 	scmpH := &slayers.SCMP{
 		TypeCode: slayers.CreateSCMPTypeCode(slayers.SCMPTypeParameterProblem,
 			slayers.SCMPCodePathExpired),
@@ -349,18 +368,19 @@ func SCMPExpiredHopAfterXover(artifactsDir string, mac hash.Hash) runner.Case {
 	}
 
 	if err := gopacket.SerializeLayers(want, options,
-		ethernet, ip, udp, scionL, scmpH, scmpP, gopacket.Payload(quote),
+		ethernet, ip, udp, scionL, e2e, scmpH, scmpP, gopacket.Payload(quote),
 	); err != nil {
 		panic(err)
 	}
 
 	return runner.Case{
-		Name:     "SCMPExpiredHopAfterXover",
-		WriteTo:  "veth_151_host",
-		ReadFrom: "veth_151_host",
-		Input:    input.Bytes(),
-		Want:     want.Bytes(),
-		StoreDir: filepath.Join(artifactsDir, "SCMPExpiredHopAfterXover"),
+		Name:            "SCMPExpiredHopAfterXover",
+		WriteTo:         "veth_151_host",
+		ReadFrom:        "veth_151_host",
+		Input:           input.Bytes(),
+		Want:            want.Bytes(),
+		StoreDir:        filepath.Join(artifactsDir, "SCMPExpiredHopAfterXover"),
+		NormalizePacket: scmpNormalizePacket,
 	}
 }
 
@@ -509,7 +529,16 @@ func SCMPExpiredHopAfterXoverConsDir(artifactsDir string, mac hash.Hash) runner.
 		panic(err)
 	}
 
-	scionL.NextHdr = common.L4SCMP
+	scionL.NextHdr = common.End2EndClass
+	e2e := &slayers.EndToEndExtn{
+		Options: []*slayers.EndToEndOption{
+			slayers.NewPacketAuthenticatorOption(
+				slayers.PacketAuthCMAC,
+				make([]byte, 16),
+			).EndToEndOption,
+		},
+	}
+	e2e.NextHdr = common.L4SCMP
 	scmpH := &slayers.SCMP{
 		TypeCode: slayers.CreateSCMPTypeCode(slayers.SCMPTypeParameterProblem,
 			slayers.SCMPCodePathExpired),
@@ -521,18 +550,19 @@ func SCMPExpiredHopAfterXoverConsDir(artifactsDir string, mac hash.Hash) runner.
 	}
 
 	if err := gopacket.SerializeLayers(want, options,
-		ethernet, ip, udp, scionL, scmpH, scmpP, gopacket.Payload(quote),
+		ethernet, ip, udp, scionL, e2e, scmpH, scmpP, gopacket.Payload(quote),
 	); err != nil {
 		panic(err)
 	}
 
 	return runner.Case{
-		Name:     "SCMPExpiredHopAfterXoverConsDir",
-		WriteTo:  "veth_151_host",
-		ReadFrom: "veth_151_host",
-		Input:    input.Bytes(),
-		Want:     want.Bytes(),
-		StoreDir: filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverConsDir"),
+		Name:            "SCMPExpiredHopAfterXoverConsDir",
+		WriteTo:         "veth_151_host",
+		ReadFrom:        "veth_151_host",
+		Input:           input.Bytes(),
+		Want:            want.Bytes(),
+		StoreDir:        filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverConsDir"),
+		NormalizePacket: scmpNormalizePacket,
 	}
 }
 
@@ -675,7 +705,16 @@ func SCMPExpiredHopAfterXoverInternal(artifactsDir string, mac hash.Hash) runner
 		panic(err)
 	}
 
-	scionL.NextHdr = common.L4SCMP
+	scionL.NextHdr = common.End2EndClass
+	e2e := &slayers.EndToEndExtn{
+		Options: []*slayers.EndToEndOption{
+			slayers.NewPacketAuthenticatorOption(
+				slayers.PacketAuthCMAC,
+				make([]byte, 16),
+			).EndToEndOption,
+		},
+	}
+	e2e.NextHdr = common.L4SCMP
 	scmpH := &slayers.SCMP{
 		TypeCode: slayers.CreateSCMPTypeCode(slayers.SCMPTypeParameterProblem,
 			slayers.SCMPCodePathExpired),
@@ -687,18 +726,19 @@ func SCMPExpiredHopAfterXoverInternal(artifactsDir string, mac hash.Hash) runner
 	}
 
 	if err := gopacket.SerializeLayers(want, options,
-		ethernet, ip, udp, scionL, scmpH, scmpP, gopacket.Payload(quote),
+		ethernet, ip, udp, scionL, e2e, scmpH, scmpP, gopacket.Payload(quote),
 	); err != nil {
 		panic(err)
 	}
 
 	return runner.Case{
-		Name:     "SCMPExpiredHopAfterXoverInternal",
-		WriteTo:  "veth_int_host",
-		ReadFrom: "veth_int_host",
-		Input:    input.Bytes(),
-		Want:     want.Bytes(),
-		StoreDir: filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverInternal"),
+		Name:            "SCMPExpiredHopAfterXoverInternal",
+		WriteTo:         "veth_int_host",
+		ReadFrom:        "veth_int_host",
+		Input:           input.Bytes(),
+		Want:            want.Bytes(),
+		StoreDir:        filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverInternal"),
+		NormalizePacket: scmpNormalizePacket,
 	}
 }
 
@@ -838,7 +878,16 @@ func SCMPExpiredHopAfterXoverInternalConsDir(artifactsDir string, mac hash.Hash)
 		panic(err)
 	}
 
-	scionL.NextHdr = common.L4SCMP
+	scionL.NextHdr = common.End2EndClass
+	e2e := &slayers.EndToEndExtn{
+		Options: []*slayers.EndToEndOption{
+			slayers.NewPacketAuthenticatorOption(
+				slayers.PacketAuthCMAC,
+				make([]byte, 16),
+			).EndToEndOption,
+		},
+	}
+	e2e.NextHdr = common.L4SCMP
 	scmpH := &slayers.SCMP{
 		TypeCode: slayers.CreateSCMPTypeCode(slayers.SCMPTypeParameterProblem,
 			slayers.SCMPCodePathExpired),
@@ -850,17 +899,18 @@ func SCMPExpiredHopAfterXoverInternalConsDir(artifactsDir string, mac hash.Hash)
 	}
 
 	if err := gopacket.SerializeLayers(want, options,
-		ethernet, ip, udp, scionL, scmpH, scmpP, gopacket.Payload(quote),
+		ethernet, ip, udp, scionL, e2e, scmpH, scmpP, gopacket.Payload(quote),
 	); err != nil {
 		panic(err)
 	}
 
 	return runner.Case{
-		Name:     "SCMPExpiredHopAfterXoverInternalConsDir",
-		WriteTo:  "veth_int_host",
-		ReadFrom: "veth_int_host",
-		Input:    input.Bytes(),
-		Want:     want.Bytes(),
-		StoreDir: filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverInternalConsDir"),
+		Name:            "SCMPExpiredHopAfterXoverInternalConsDir",
+		WriteTo:         "veth_int_host",
+		ReadFrom:        "veth_int_host",
+		Input:           input.Bytes(),
+		Want:            want.Bytes(),
+		StoreDir:        filepath.Join(artifactsDir, "SCMPExpiredHopAfterXoverInternalConsDir"),
+		NormalizePacket: scmpNormalizePacket,
 	}
 }
