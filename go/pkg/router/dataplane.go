@@ -16,6 +16,7 @@ package router
 
 import (
 	"bytes"
+	"crypto/aes"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/binary"
@@ -1446,8 +1447,14 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 
 	needsAuth := (cause != nil) // TODO(matzf): || hasValidAuth(p.e2eLayer)
 	var e2e slayers.EndToEndExtn
+	var optAuth slayers.PacketAuthenticatorOption
 	if needsAuth {
 		scionL.NextHdr = common.End2EndClass
+		optAuth = slayers.NewPacketAuthenticatorOption(
+			slayers.PacketAuthCMAC,
+			make([]byte, aes.BlockSize),
+		)
+		e2e.Options = []*slayers.EndToEndOption{optAuth.EndToEndOption}
 		e2e.NextHdr = common.L4SCMP
 	} else {
 		scionL.NextHdr = common.L4SCMP
@@ -1459,6 +1466,7 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 	if cause != nil {
 		// add quote for errors.
 		hdrLen := slayers.CmnHdrLen + scionL.AddrHdrLen() + scionL.Path.Len()
+		hdrLen += e2e.Len()
 		switch scmpH.TypeCode.Type() {
 		case slayers.SCMPTypeExternalInterfaceDown:
 			hdrLen += 20
@@ -1488,18 +1496,15 @@ func (p *scionPacketProcessor) prepareSCMP(scmpH *slayers.SCMP, scmpP gopacket.S
 
 	// Now prepend the SCION header(s), with authenticator in E2E extensions.
 	if needsAuth {
-		// XXX(matzf) move to (?)
 		var key [drkey.KeySize]byte
 		if err := p.drkey.ASToHost(scionL.DstIA, srcA, key[:]); err != nil {
 			return nil, serrors.Wrap(cannotRoute, err, "details", "deriving key",
 				"ia", scionL.DstIA, "host", srcA)
 		}
-		mac, err := computeAuthCMAC(key[:], &scionL, p.buffer.Bytes())
-		if err != nil {
+		buf := optAuth.Authenticator()
+		if err := computeAuthCMAC(key[:], &scionL, p.buffer.Bytes(), buf); err != nil {
 			return nil, serrors.Wrap(cannotRoute, err, "details", "computing CMAC")
 		}
-		optAuth := slayers.NewPacketAuthenticatorOption(slayers.PacketAuthCMAC, mac)
-		e2e.Options = []*slayers.EndToEndOption{optAuth.EndToEndOption}
 
 		if err := e2e.SerializeTo(p.buffer, sopts); err != nil {
 			return nil, serrors.Wrap(cannotRoute, err, "details", "serializing SCION E2E headers")
@@ -1585,26 +1590,27 @@ func serviceMetricLabels(localIA addr.IA, svc addr.HostSVC) prometheus.Labels {
 	}
 }
 
-// TODO put this to ... ? scrypto/spae (scion packet authenticator extension :/)
-// TODO pass buffer for result
+// TODO put this where? scrypto/spae (scion packet authenticator extension :/)
 // XXX can we integrate this better with the layer serialization? using this is hairy...
-func computeAuthCMAC(key []byte, scionL *slayers.SCION, pld []byte) ([]byte, error) {
+func computeAuthCMAC(key []byte, scionL *slayers.SCION, pld []byte, mac []byte) error {
+
 	// TODO(matzf): avoid allocations, somehow?
 	// Note: InitMac is probably intended for the hop field MAC; here we _want CMAC_,
 	// change this if HF MAC is ever changed.
 	cmac, err := scrypto.InitMac(key)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
 	hdr := make([]byte, scionL.AddrHdrLen()+4)
 	n, err := writePseudoHeader(hdr, scionL, len(pld))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	cmac.Write(hdr[:n])
 	cmac.Write(pld)
-	return cmac.Sum(nil)[:16], nil
+	copy(mac, cmac.Sum(nil))
+	return nil
 }
 
 // XXX(matzf) the pseudoHeader definition does NOT include the address type fields :/

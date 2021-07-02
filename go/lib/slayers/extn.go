@@ -164,6 +164,11 @@ type extnBase struct {
 	ActualLen int
 }
 
+func (e *extnBase) computeLen(tlvOptions []*tlvOption) int {
+	l := serializeTLVOptions(nil, tlvOptions, true)
+	return l + 2
+}
+
 func (e *extnBase) serializeToWithTLVOptions(b gopacket.SerializeBuffer,
 	opts gopacket.SerializeOptions, tlvOptions []*tlvOption) error {
 
@@ -232,6 +237,19 @@ func (h *HopByHopExtn) NextLayerType() gopacket.LayerType {
 
 func (h *HopByHopExtn) LayerPayload() []byte {
 	return h.Payload
+}
+
+// Len returns the computed length of a an extension header in bytes.
+// This includes the extension header with all contained options and any
+// padding. Equivalent to the number of bytes that will be prepended by
+// SerializeTo with opt.FixLengths set.
+func (h *HopByHopExtn) Len() int {
+	o := make([]*tlvOption, 0, len(h.Options))
+	for _, v := range h.Options {
+		o = append(o, (*tlvOption)(v))
+	}
+
+	return h.computeLen(o)
 }
 
 // SerializeTo implementation according to gopacket.SerializableLayer
@@ -353,6 +371,19 @@ func checkEndToEndExtnNextHdr(t common.L4ProtocolType) error {
 		return serrors.New("e2e extension must not be repeated")
 	}
 	return nil
+}
+
+// Len returns the computed length of a an extension header in bytes.
+// This includes the extension header with all contained options and any
+// padding. Equivalent to the number of bytes that will be prepended by
+// SerializeTo with opt.FixLengths set.
+func (e *EndToEndExtn) Len() int {
+	o := make([]*tlvOption, 0, len(e.Options))
+	for _, v := range e.Options {
+		o = append(o, (*tlvOption)(v))
+	}
+
+	return e.computeLen(o)
 }
 
 // SerializeTo implementation according to gopacket.SerializableLayer
