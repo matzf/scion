@@ -15,13 +15,10 @@ as the upper layer payload.
 :ref:`SCION Extension Headers <scion-extension-headers>` are **not** protected.
 
 In the current form, this option is primarily intended to be used in
-conjunction with DRKey which provides shared secrets without explicit key
+conjunction with :ref:`drkey` which provides shared secrets without explicit key
 exchange.
 The option is designed to allow future extensions to make it applicable also in
 scenarios with explicitly set up shared state, analogous to IPSec.
-
-.. TODO Add detailed references to DRKey docs once this is converted to RST.
-
 
 Format of the Authenticator Option
 ==================================
@@ -130,8 +127,6 @@ the future will closely follow [`RFC 4302 <https://tools.ietf.org/html/rfc4302>`
 DRKey
 ^^^^^
 
-.. TODO Add detailed references to DRKey docs once this is converted to RST.
-
 .. code-block:: text
 
      0                   1                   2                   3
@@ -147,8 +142,8 @@ R
 T
   Type. Specifies the type of the key in the DRKey key hierarchy.
 
-    * ``0``: AS-to-host key
-    * ``1``: host-to-host key
+    * ``0``: :ref:`AS-host key <drkey-as-host>`
+    * ``1``: :ref:`host-host key <drkey-host-host>`
 D
   Direction. Specifies which the deriving side and which is the fetching side.
 
@@ -162,8 +157,8 @@ E
     * ``0``: the active epoch with later start time
     * ``1``: the active epoch with earlier start time
 Protocol Identifier
-  16-bit protocol identifier. Note that 0 is a reserved protocol number and
-  cannot occur here.
+  16-bit :ref:`DRKey protocol identifier <drkey-protocol-identifiers>`.
+  Note that 0 is a reserved protocol number and cannot occur here.
 
 
 Authenticated Data
@@ -258,7 +253,7 @@ The input for the MAC is the concatenation of the following items:
 
   If an end-to-end key is used (T=1), both source and destination host
   addresses are skipped.
-  If an AS-to-host key is used (T=0), the host address for the deriving side is
+  If an AS-host key is used (T=0), the host address for the deriving side is
   not included in the key derivation and must be included in the MAC
   computation.
   With sender-side key derivation (D=0), the source host address is included in
