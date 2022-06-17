@@ -160,6 +160,7 @@ Protocol Identifier
   16-bit :ref:`DRKey protocol identifier <drkey-protocol-identifiers>`.
   Note that 0 is a reserved protocol number and cannot occur here.
 
+.. _spao-authenticated-data:
 
 Authenticated Data
 ==================
@@ -279,29 +280,40 @@ The input for the MAC is the concatenation of the following items:
 
 Algorithms
 ==========
-======= ============== ======================================= =============
-Decimal Algorithm      Description                             Reference
-======= ============== ======================================= =============
-0       AES-CMAC       16-byte MAC                             [`RFC 4493 <https://tools.ietf.org/html/rfc4493>`_]
-1       SHA1-AES-CBC   20-byte SHA1 hash, 16-byte MAC          :ref:`spao-hash-then-mac`
+
+.. |br| raw:: html
+
+  <br/>
+
+======= ============== ============================================ =============
+Decimal Algorithm      Description                                  Reference
+======= ============== ============================================ =============
+0       AES-CMAC       16-byte MAC                                  [`RFC 4493 <https://tools.ietf.org/html/rfc4493>`_]
+1       AES-CMAC-MAC   Two 16-byte MACs.                       |br| :ref:`spao-mac-then-mac`
+                       The first MAC covers the full packet    |br|
+                       including payload, identical to the     |br|
+                       ``AES-CMAC`` algorithm type.            |br|
+                       The second MAC covers packet headers    |br|
+                       and the first MAC.
 253                    use for experimentation and testing
 254                    use for experimentation and testing
 255                    reserved
-======= ============== ======================================= =============
+======= ============== ============================================ =============
 
 
-.. _spao-hash-then-mac:
+.. _spao-mac-then-mac:
 
-SHA1-AES-CBC
--------------
+AES-CMAC-MAC
+------------
 
-The ``SHA1-AES-CBC`` algorithm operates in a two staged fashion; the bulk of
-the authenticated data is hashed and the resulting hash is included in the
-option header. The MAC is computed over only the most relevant header fields
-and the hash as input. This allows to quickly determine the authenticity of the
+The ``AES-CMAC-MAC`` algorithm operates in a two staged fashion. First,
+the CMAC of the entire packet is computed identical to the ``AES-CMAC`` algorithm
+and the resulting MAC is included in the option header.
+Then a second MAC is computed over only the most relevant header fields
+and the first MAC as input. This allows a to quickly determine the authenticity of the
 packet, deferring the data integrity check of the full packet.
 
-The format of the authenticator data for the ``SHA1-AES-CBC`` algorithm is:
+The format of the authenticator data for the ``AES-CMAC-MAC`` algorithm is:
 
 .. code-block:: text
 
@@ -309,28 +321,24 @@ The format of the authenticator data for the ``SHA1-AES-CBC`` algorithm is:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                                                               |
-    |                                                               |
-    |                        SHA1 hash (20 byte)                    |
-    |                                                               |
-    |                                                               |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                                                               |
-    |                      AES-CBC MAC (16 byte)                    |
+    |                      AES-CMAC    (16 byte)                    |
     |                                                               |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    |                      AES-CBC-MAC (16 byte)                    |
+    |                                                               |
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-The SHA1 hash is computed over:
+The AES-CMAC is computed over the full input, as described in section
+:ref:`spao-authenticated-data`.
 
-* the SCION Common Header (2.)
-* the Path (4.)
-* the upper layer payload (5.)
+The input to the AES-CBC-MAC is:
 
-The input to the MAC is:
-
-* the Authenticator Option Metadata (1., 12 bytes)
+* the Authenticator Option Metadata (1.) (12 bytes)
 * the Address Type/Length fields (1 byte, padded to 4 bytes)
-  and the Address Header (3., 0-48 bytes).
+  and the Address Header (3.) (0-48 bytes).
 
   The Address Type/Length fields are extracted from the third row of
   the Common Header, with the remaining fields zeroed out::
@@ -346,11 +354,11 @@ The input to the MAC is:
   used with a :ref:`SPI referring to a DRKey <spao-spi-drkey>`. If both
   addresses are skipped, the row for the Address Type/Length fields byte is
   also skipped.
-* the SHA1 hash (20 bytes)
+* the AES-CMAC (16 bytes)
 
 Observe that when used with suitable a :ref:`SPI referring to a DRKey
 <spao-spi-drkey>`, the address header may be left empty, resulting in an ideal
-32-byte input size for the AES-CBC MAC.
+28-byte input size for the AES-CBC-MAC.
 
 This scheme is safe from length extension attacks on the AES-CBC MAC; except
 for the addresses, all fields are of a fixed size. The length of the address
