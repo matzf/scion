@@ -19,23 +19,23 @@ import (
 	"io"
 	"syscall"
 
-	"github.com/scionproto/scion/pkg/private/common"
+	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
 // Possible errors
 var (
-	ErrNoAddress             common.ErrMsg = "no address found"
-	ErrNoPort                common.ErrMsg = "missing port"
-	ErrPayloadTooLong        common.ErrMsg = "payload too long"
-	ErrIncompleteFrameHeader common.ErrMsg = "incomplete frame header"
-	ErrBadFrameLength        common.ErrMsg = "bad frame length"
-	ErrBadCookie             common.ErrMsg = "bad cookie"
-	ErrBadAddressType        common.ErrMsg = "bad address type"
-	ErrIncompleteAddress     common.ErrMsg = "incomplete IP address"
-	ErrIncompletePort        common.ErrMsg = "incomplete UDP port"
-	ErrIncompleteMessage     common.ErrMsg = "incomplete message"
-	ErrBadLength             common.ErrMsg = "bad length"
-	ErrBufferTooSmall        common.ErrMsg = "buffer too small"
+	ErrNoAddress             serrors.StrError = "no address found"
+	ErrNoPort                serrors.StrError = "missing port"
+	ErrPayloadTooLong        serrors.StrError = "payload too long"
+	ErrIncompleteFrameHeader serrors.StrError = "incomplete frame header"
+	ErrBadFrameLength        serrors.StrError = "bad frame length"
+	ErrBadCookie             serrors.StrError = "bad cookie"
+	ErrBadAddressType        serrors.StrError = "bad address type"
+	ErrIncompleteAddress     serrors.StrError = "incomplete IP address"
+	ErrIncompletePort        serrors.StrError = "incomplete UDP port"
+	ErrIncompleteMessage     serrors.StrError = "incomplete message"
+	ErrBadLength             serrors.StrError = "bad length"
+	ErrBufferTooSmall        serrors.StrError = "buffer too small"
 )
 
 func IsDispatcherError(err error) bool {

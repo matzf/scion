@@ -19,12 +19,12 @@ import (
 	"encoding/binary"
 	mrand "math/rand"
 
-	"github.com/scionproto/scion/pkg/private/common"
+	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
 const (
-	ErrInvalidNonceSize      common.ErrMsg = "Invalid nonce size"
-	ErrUnableToGenerateNonce common.ErrMsg = "Unable to generate nonce"
+	ErrInvalidNonceSize      serrors.StrError = "Invalid nonce size"
+	ErrUnableToGenerateNonce serrors.StrError = "Unable to generate nonce"
 )
 
 func init() {

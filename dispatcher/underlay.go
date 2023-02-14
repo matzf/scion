@@ -33,11 +33,11 @@ import (
 )
 
 const (
-	ErrUnsupportedL4              common.ErrMsg = "unsupported SCION L4 protocol"
-	ErrUnsupportedDestination     common.ErrMsg = "unsupported destination address type"
-	ErrUnsupportedSCMPDestination common.ErrMsg = "unsupported SCMP destination address type"
-	ErrUnsupportedQuotedL4Type    common.ErrMsg = "unsupported quoted L4 protocol type"
-	ErrMalformedL4Quote           common.ErrMsg = "malformed L4 quote"
+	ErrUnsupportedL4              serrors.StrError = "unsupported SCION L4 protocol"
+	ErrUnsupportedDestination     serrors.StrError = "unsupported destination address type"
+	ErrUnsupportedSCMPDestination serrors.StrError = "unsupported SCMP destination address type"
+	ErrUnsupportedQuotedL4Type    serrors.StrError = "unsupported quoted L4 protocol type"
+	ErrMalformedL4Quote           serrors.StrError = "malformed L4 quote"
 )
 
 // NetToRingDataplane reads SCION packets from the underlay socket, routes them

@@ -25,7 +25,7 @@ import (
 	"github.com/scionproto/scion/pkg/snet"
 )
 
-const ErrHandler common.ErrMsg = "Unable to handle SVC request"
+const ErrHandler serrors.StrError = "Unable to handle SVC request"
 
 // Result is used to inform Handler users on the outcome of handler execution.
 type Result int

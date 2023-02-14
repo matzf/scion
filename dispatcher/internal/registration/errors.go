@@ -14,16 +14,16 @@
 
 package registration
 
-import "github.com/scionproto/scion/pkg/private/common"
+import "github.com/scionproto/scion/pkg/private/serrors"
 
 const (
-	ErrNoPublicAddress    common.ErrMsg = "no public address"
-	ErrBindWithoutSvc     common.ErrMsg = "bind address without svc address"
-	ErrOverlappingAddress common.ErrMsg = "overlapping address"
-	ErrNoValue            common.ErrMsg = "nil value"
-	ErrZeroIP             common.ErrMsg = "zero address"
-	ErrZeroPort           common.ErrMsg = "zero port"
-	ErrNilAddress         common.ErrMsg = "nil address"
-	ErrSvcNone            common.ErrMsg = "svc none"
-	ErrNoPorts            common.ErrMsg = "no free ports"
+	ErrNoPublicAddress    serrors.StrError = "no public address"
+	ErrBindWithoutSvc     serrors.StrError = "bind address without svc address"
+	ErrOverlappingAddress serrors.StrError = "overlapping address"
+	ErrNoValue            serrors.StrError = "nil value"
+	ErrZeroIP             serrors.StrError = "zero address"
+	ErrZeroPort           serrors.StrError = "zero port"
+	ErrNilAddress         serrors.StrError = "nil address"
+	ErrSvcNone            serrors.StrError = "svc none"
+	ErrNoPorts            serrors.StrError = "no free ports"
 )

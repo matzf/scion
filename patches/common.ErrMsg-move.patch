@@ -1,0 +1,7 @@
+@@
+@@
+-import "github.com/scionproto/scion/pkg/private/common"
++import "github.com/scionproto/scion/pkg/private/serrors"
+
+-common.ErrMsg
++serrors.StrError

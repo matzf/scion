@@ -14,10 +14,7 @@
 
 package db
 
-import (
-	"github.com/scionproto/scion/pkg/private/common"
-	"github.com/scionproto/scion/pkg/private/serrors"
-)
+import "github.com/scionproto/scion/pkg/private/serrors"
 
 const (
 	// ErrInvalidInputData indicates invalid data was tried to input in the DB.
@@ -32,27 +29,27 @@ const (
 	ErrTx serrors.StrError = "db: transaction error"
 )
 
-func NewTxError(msg common.ErrMsg, err error, logCtx ...interface{}) error {
+func NewTxError(msg serrors.StrError, err error, logCtx ...interface{}) error {
 	return serrors.Wrap(ErrTx, err,
 		append([]interface{}{"detailMsg", msg}, logCtx...)...)
 }
 
-func NewInputDataError(msg common.ErrMsg, err error, logCtx ...interface{}) error {
+func NewInputDataError(msg serrors.StrError, err error, logCtx ...interface{}) error {
 	return serrors.Wrap(ErrInvalidInputData, err,
 		append([]interface{}{"detailMsg", msg}, logCtx...)...)
 }
 
-func NewDataError(msg common.ErrMsg, err error, logCtx ...interface{}) error {
+func NewDataError(msg serrors.StrError, err error, logCtx ...interface{}) error {
 	return serrors.Wrap(ErrDataInvalid, err,
 		append([]interface{}{"detailMsg", msg}, logCtx...)...)
 }
 
-func NewReadError(msg common.ErrMsg, err error, logCtx ...interface{}) error {
+func NewReadError(msg serrors.StrError, err error, logCtx ...interface{}) error {
 	return serrors.Wrap(ErrReadFailed, err,
 		append([]interface{}{"detailMsg", msg}, logCtx...)...)
 }
 
-func NewWriteError(msg common.ErrMsg, err error, logCtx ...interface{}) error {
+func NewWriteError(msg serrors.StrError, err error, logCtx ...interface{}) error {
 	return serrors.Wrap(ErrWriteFailed, err,
 		append([]interface{}{"detailMsg", msg}, logCtx...)...)
 }

@@ -22,13 +22,12 @@ import (
 	"github.com/dchest/cmac"
 	"golang.org/x/crypto/pbkdf2"
 
-	"github.com/scionproto/scion/pkg/private/common"
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
 const (
-	ErrCipherFailure common.ErrMsg = "Unable to initialize AES cipher"
-	ErrMacFailure    common.ErrMsg = "Unable to initialize Mac"
+	ErrCipherFailure serrors.StrError = "Unable to initialize AES cipher"
+	ErrMacFailure    serrors.StrError = "Unable to initialize Mac"
 )
 
 var (

@@ -15,7 +15,6 @@ go_library(
     visibility = ["//dispatcher:__subpackages__"],
     deps = [
         "//pkg/addr:go_default_library",
-        "//pkg/private/common:go_default_library",
         "//pkg/private/serrors:go_default_library",
     ],
 )

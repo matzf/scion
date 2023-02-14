@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/scionproto/scion/pkg/private/common"
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
@@ -34,9 +33,9 @@ const (
 
 // Errors
 const (
-	ErrOpen    common.ErrMsg = "Unable to load key"
-	ErrParse   common.ErrMsg = "Unable to parse key file"
-	ErrUnknown common.ErrMsg = "Unknown algorithm"
+	ErrOpen    serrors.StrError = "Unable to load key"
+	ErrParse   serrors.StrError = "Unable to parse key file"
+	ErrUnknown serrors.StrError = "Unknown algorithm"
 )
 
 // loadKey decodes a base64 encoded key stored in file and returns the raw bytes.

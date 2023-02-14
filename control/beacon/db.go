@@ -22,7 +22,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/scionproto/scion/pkg/addr"
-	"github.com/scionproto/scion/pkg/private/common"
+	"github.com/scionproto/scion/pkg/private/serrors"
 	cppb "github.com/scionproto/scion/pkg/proto/control_plane"
 	seg "github.com/scionproto/scion/pkg/segment"
 )
@@ -30,9 +30,9 @@ import (
 const (
 	// ErrReadingRows is the error message in case we fail to read more from
 	// the database.
-	ErrReadingRows common.ErrMsg = "Failed to read rows"
+	ErrReadingRows serrors.StrError = "Failed to read rows"
 	// ErrParse is the error message in case the parsing a db entry fails.
-	ErrParse common.ErrMsg = "Failed to parse entry"
+	ErrParse serrors.StrError = "Failed to parse entry"
 )
 
 // InsertStats provides statistics about an insertion.

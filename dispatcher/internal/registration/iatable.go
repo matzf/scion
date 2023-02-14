@@ -19,12 +19,12 @@ import (
 	"sync"
 
 	"github.com/scionproto/scion/pkg/addr"
-	"github.com/scionproto/scion/pkg/private/common"
+	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
 const (
-	ErrBadISD common.ErrMsg = "0 is not valid ISD"
-	ErrBadAS  common.ErrMsg = "0 is not valid AS"
+	ErrBadISD serrors.StrError = "0 is not valid ISD"
+	ErrBadAS  serrors.StrError = "0 is not valid AS"
 )
 
 // Reference tracks an object from a collection.

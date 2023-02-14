@@ -1,3 +1,5 @@
+// Copyright 2016 ETH Zurich
+// Copyright 2019 ETH Zurich, Anapaya Systems
 // Copyright 2023 SCION Association
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

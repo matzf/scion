@@ -33,13 +33,13 @@ import (
 // Internal resolver errors. These are implementation details and can change,
 // and calling code should not depend on them.
 const (
-	errNilPacket      common.ErrMsg = "packet is nil"
-	errNilUnderlay    common.ErrMsg = "underlay is nil"
-	errUnsupportedPld common.ErrMsg = "unsupported payload type"
-	errRegistration   common.ErrMsg = "unable to open conn"
-	errWrite          common.ErrMsg = "unable to write"
-	errRead           common.ErrMsg = "unable to read"
-	errDecode         common.ErrMsg = "decode failed"
+	errNilPacket      serrors.StrError = "packet is nil"
+	errNilUnderlay    serrors.StrError = "underlay is nil"
+	errUnsupportedPld serrors.StrError = "unsupported payload type"
+	errRegistration   serrors.StrError = "unable to open conn"
+	errWrite          serrors.StrError = "unable to write"
+	errRead           serrors.StrError = "unable to read"
+	errDecode         serrors.StrError = "decode failed"
 )
 
 // For now, the request payload does not need to be dynamic. We initialize it
