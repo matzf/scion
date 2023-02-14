@@ -1,0 +1,17 @@
+rules:
+- id: no-var-serrors-new
+  message: "Prefer constants over error global message variables"
+  patterns:
+    - pattern-either:
+        - pattern: var $ERR = serrors.New($MSG)
+        - pattern: var $ERR = errors.New($MSG)
+    # match at package scope, i.e. not inside functions
+    - pattern-not-inside: func $X(...) { ... }
+  fix: const $ERR serrors.StrError = $MSG
+  languages: [go]
+  severity: WARNING
+  paths:
+    exclude:
+        - "*_test.go" # not important in tests, can prefer convenience
+        - "pkg/scrypto/cms" # vendored third party code
+        - "tools/lint/serrorscheck/testdata"
