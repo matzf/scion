@@ -39,7 +39,7 @@ const (
 	defaultRPCDialTimeout time.Duration = 2 * time.Second
 )
 
-var errNotReachable = serrors.New("remote not reachable")
+const errNotReachable serrors.StrError = "remote not reachable"
 
 // Fetcher obtains Level1 DRKey from a remote CS.
 type Fetcher struct {

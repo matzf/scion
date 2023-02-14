@@ -46,9 +46,9 @@ const (
 	defaultGatewayPollTimeout = 5 * time.Second
 )
 
-var (
+const (
 	// ErrAlreadyRunning is the error returned when attempting to run a task twice.
-	ErrAlreadyRunning = serrors.New("is running")
+	ErrAlreadyRunning serrors.StrError = "is running"
 )
 
 // Gateway represents a remote gateway instance.

@@ -37,9 +37,9 @@ import (
 )
 
 // Errors
-var (
+const (
 	// ErrSegment indicates the segment failed to verify.
-	ErrSegment = serrors.New("segment verification error")
+	ErrSegment serrors.StrError = "segment verification error"
 )
 
 const (

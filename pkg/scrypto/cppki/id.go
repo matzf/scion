@@ -24,16 +24,16 @@ import (
 	"github.com/scionproto/scion/pkg/scrypto"
 )
 
-var (
+const (
 	// ErrWildcardISD indicates a wildcard ISD.
-	ErrWildcardISD = serrors.New("wildcard ISD")
+	ErrWildcardISD serrors.StrError = "wildcard ISD"
 	// ErrReservedNumber indicates that the number is reserved.
-	ErrReservedNumber = serrors.New("reserved number")
+	ErrReservedNumber serrors.StrError = "reserved number"
 	// ErrSerialBeforeBase indicates that the serial number is smaller than the
 	// base number.
-	ErrSerialBeforeBase = serrors.New("serial before base")
+	ErrSerialBeforeBase serrors.StrError = "serial before base"
 	// ErrInvalidTRCIDString indicates that provided string in not valid TRC ID formatted string.
-	ErrInvalidTRCIDString = serrors.New("string is not valid TRC ID")
+	ErrInvalidTRCIDString serrors.StrError = "string is not valid TRC ID"
 )
 
 // TRCID identifies a TRC.

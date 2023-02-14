@@ -16,10 +16,10 @@ package reconnect
 
 import "github.com/scionproto/scion/pkg/private/serrors"
 
-var (
-	ErrDispatcherDead = serrors.New("dispatcher dead")
+const (
+	ErrDispatcherDead serrors.StrError = "dispatcher dead"
 	// FIXME(scrye): Change this s.t. it's serrors.IsTimeout compatible.
-	ErrReconnecterTimeoutExpired = serrors.New("timeout expired")
-	ErrReconnecterStopped        = serrors.New("stop method was called")
-	ErrClosed                    = serrors.New("closed")
+	ErrReconnecterTimeoutExpired serrors.StrError = "timeout expired"
+	ErrReconnecterStopped        serrors.StrError = "stop method was called"
+	ErrClosed                    serrors.StrError = "closed"
 )

@@ -46,12 +46,12 @@ func (f DeviceOpenerFunc) Open(ctx context.Context, ia addr.IA) (Device, error) 
 	return f(ctx, ia)
 }
 
-var (
+const (
 	// ObjectDestroyedError is returned by DeviceHandle API calls if the handle has been closed
 	// before or during the API call. If the device is closed while the API call is ongoing, it is
 	// not guaranteed that the returned error is ObjectDestroyedError, because the device access
 	// might have completed before the close, but the API call hasn't finished yet.
-	ObjectDestroyedError = serrors.New("object was destroyed")
+	ObjectDestroyedError serrors.StrError = "object was destroyed"
 )
 
 // DeviceHandle implements reference counting for a Device. Close should be called once

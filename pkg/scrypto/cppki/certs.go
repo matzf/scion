@@ -66,11 +66,11 @@ var (
 	}
 )
 
-var (
+const (
 	// ErrInvalidCertType indicates an invalid certificate type.
-	ErrInvalidCertType = serrors.New("invalid certificate type")
+	ErrInvalidCertType serrors.StrError = "invalid certificate type"
 
-	errIANotFound = serrors.New("ISD-AS not found")
+	errIANotFound serrors.StrError = "ISD-AS not found"
 )
 
 // CertType describes the type of the SCION certificate.

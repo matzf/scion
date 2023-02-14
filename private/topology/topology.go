@@ -35,7 +35,7 @@ import (
 const EndhostPort = underlay.EndhostPort
 
 // ErrAddressNotFound indicates the address was not found.
-var ErrAddressNotFound = serrors.New("address not found")
+const ErrAddressNotFound serrors.StrError = "address not found"
 
 type (
 	// RWTopology is the topology type for applications and libraries that need write

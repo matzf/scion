@@ -24,7 +24,7 @@ import (
 )
 
 // ErrRecursionNotAllowed indicates that recursion is not allowed.
-var ErrRecursionNotAllowed = serrors.New("recursion not allowed")
+const ErrRecursionNotAllowed serrors.StrError = "recursion not allowed"
 
 // Recurser decides whether a recursive request is permitted for a given peer.
 // For infra services use either ASLocalRecurser or LocalOnlyRecurser.

@@ -111,21 +111,24 @@ type DataPlane struct {
 	forwardingMetrics map[uint16]forwardingMetrics
 }
 
+const (
+	alreadySet                    serrors.StrError = "already set"
+	invalidSrcIA                  serrors.StrError = "invalid source ISD-AS"
+	invalidDstIA                  serrors.StrError = "invalid destination ISD-AS"
+	invalidSrcAddrForTransit      serrors.StrError = "invalid source address for transit pkt"
+	cannotRoute                   serrors.StrError = "cannot route, dropping pkt"
+	emptyValue                    serrors.StrError = "empty value"
+	malformedPath                 serrors.StrError = "malformed path content"
+	modifyExisting                serrors.StrError = "modifying a running dataplane is not allowed"
+	noSVCBackend                  serrors.StrError = "cannot find internal IP for the SVC"
+	unsupportedPathType           serrors.StrError = "unsupported path type"
+	unsupportedPathTypeNextHeader serrors.StrError = "unsupported combination"
+	noBFDSessionFound             serrors.StrError = "no BFD sessions was found"
+	noBFDSessionConfigured        serrors.StrError = "no BFD sessions have been configured"
+	errBFDDisabled                serrors.StrError = "BFD is disabled"
+)
+
 var (
-	alreadySet                    = serrors.New("already set")
-	invalidSrcIA                  = serrors.New("invalid source ISD-AS")
-	invalidDstIA                  = serrors.New("invalid destination ISD-AS")
-	invalidSrcAddrForTransit      = serrors.New("invalid source address for transit pkt")
-	cannotRoute                   = serrors.New("cannot route, dropping pkt")
-	emptyValue                    = serrors.New("empty value")
-	malformedPath                 = serrors.New("malformed path content")
-	modifyExisting                = serrors.New("modifying a running dataplane is not allowed")
-	noSVCBackend                  = serrors.New("cannot find internal IP for the SVC")
-	unsupportedPathType           = serrors.New("unsupported path type")
-	unsupportedPathTypeNextHeader = serrors.New("unsupported combination")
-	noBFDSessionFound             = serrors.New("no BFD sessions was found")
-	noBFDSessionConfigured        = serrors.New("no BFD sessions have been configured")
-	errBFDDisabled                = serrors.New("BFD is disabled")
 	// zeroBuffer will be used to reset the Authenticator option in the
 	// scionPacketProcessor.OptAuth
 	zeroBuffer = make([]byte, 16)

@@ -16,6 +16,6 @@ package topology
 
 import "github.com/scionproto/scion/pkg/private/serrors"
 
-var (
-	errUnderlayAddrNotFound = serrors.New("underlay address not found")
+const (
+	errUnderlayAddrNotFound serrors.StrError = "underlay address not found"
 )

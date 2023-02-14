@@ -29,7 +29,7 @@ import (
 )
 
 // ErrNotReachable indicates that the destination is not reachable from this process.
-var ErrNotReachable = serrors.New("remote not reachable")
+const ErrNotReachable serrors.StrError = "remote not reachable"
 
 // SegmentsReply represents the segments received from an RPC. It also includes
 // meta data like the Peer address that is to be used for verification.

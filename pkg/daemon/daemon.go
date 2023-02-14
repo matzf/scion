@@ -31,8 +31,8 @@ import (
 )
 
 // Errors for SCION Daemon API requests
-var (
-	ErrUnableToConnect = serrors.New("unable to connect to the SCION Daemon")
+const (
+	ErrUnableToConnect serrors.StrError = "unable to connect to the SCION Daemon"
 )
 
 const (

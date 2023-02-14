@@ -42,7 +42,7 @@ type Connector struct {
 	siblingInterfaces  map[uint16]control.SiblingInterface
 }
 
-var errMultiIA = serrors.New("different IA not allowed")
+const errMultiIA serrors.StrError = "different IA not allowed"
 
 // CreateIACtx creates the context for ISD-AS.
 func (c *Connector) CreateIACtx(ia addr.IA) error {

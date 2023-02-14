@@ -24,9 +24,9 @@ import (
 )
 
 // Errors
-var (
-	ErrVerification = serrors.New("all segments failed to verify")
-	ErrDB           = serrors.New("database error")
+const (
+	ErrVerification serrors.StrError = "all segments failed to verify"
+	ErrDB           serrors.StrError = "database error"
 )
 
 // Segments is a list of segments and revocations belonging to them.

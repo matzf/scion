@@ -21,7 +21,7 @@ import (
 )
 
 // ErrInvalidValidityPeriod indicates an invalid validity period.
-var ErrInvalidValidityPeriod = serrors.New("NotAfter before NotBefore")
+const ErrInvalidValidityPeriod serrors.StrError = "NotAfter before NotBefore"
 
 // Validity indicates the TRC validity.
 type Validity struct {

@@ -25,38 +25,38 @@ import (
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
-var (
+const (
 	// ErrInvalidTRCVersion indicates an invalid TRC version.
-	ErrInvalidTRCVersion = serrors.New("invalid TRC version")
+	ErrInvalidTRCVersion serrors.StrError = "invalid TRC version"
 	// ErrInvalidID indicates an invalid TRC ID.
-	ErrInvalidID = serrors.New("invalid ID")
+	ErrInvalidID serrors.StrError = "invalid ID"
 	// ErrGracePeriodNonZero indicates the grace period is non-zero in a
 	// non-base TRC.
-	ErrGracePeriodNonZero = serrors.New("grace period non-zero")
+	ErrGracePeriodNonZero serrors.StrError = "grace period non-zero"
 	// ErrVotesOnBaseTRC indicates that there are votes on a base TRC.
-	ErrVotesOnBaseTRC = serrors.New("non-empty votes on base TRC")
+	ErrVotesOnBaseTRC serrors.StrError = "non-empty votes on base TRC"
 	// ErrInvalidQuorumSize indicates the quorum size is outside of the [1,255]
 	// range.
-	ErrInvalidQuorumSize = serrors.New("invalid quorum size")
+	ErrInvalidQuorumSize serrors.StrError = "invalid quorum size"
 	// ErrNoASes indicates the ASes sequence is empty in the TRC.
-	ErrNoASes = serrors.New("no ASes")
+	ErrNoASes serrors.StrError = "no ASes"
 	// ErrWildcardAS indicates a wildcard AS.
-	ErrWildcardAS = serrors.New("wildcard AS")
+	ErrWildcardAS serrors.StrError = "wildcard AS"
 	// ErrDuplicateAS indicates an AS is duplicated in the sequence.
-	ErrDuplicateAS = serrors.New("duplicate AS")
+	ErrDuplicateAS serrors.StrError = "duplicate AS"
 	// ErrUnclassifiedCertificate indicates a certificate could not be
 	// classified as neither sensitive voting, regular voting nor root.
-	ErrUnclassifiedCertificate = serrors.New("unclassified certificate")
+	ErrUnclassifiedCertificate serrors.StrError = "unclassified certificate"
 	// ErrNotEnoughVoters indicates that the number of voters is smaller than
 	// the voting quorum.
-	ErrNotEnoughVoters = serrors.New("not enough voters")
+	ErrNotEnoughVoters serrors.StrError = "not enough voters"
 	// ErrCertForOtherISD indicates a certificate that is for another ISD.
-	ErrCertForOtherISD = serrors.New("certificate for other ISD")
+	ErrCertForOtherISD serrors.StrError = "certificate for other ISD"
 	// ErrDuplicate indicates a duplicate certificate in the TRC.
-	ErrDuplicate = serrors.New("duplicate certificate")
+	ErrDuplicate serrors.StrError = "duplicate certificate"
 	// ErrTRCValidityNotCovered indicates that the TRC validity period is not
 	// covered by a certificate.
-	ErrTRCValidityNotCovered = serrors.New("TRC validity not covered by certificate")
+	ErrTRCValidityNotCovered serrors.StrError = "TRC validity not covered by certificate"
 )
 
 // UpdateType indicates the type of update.

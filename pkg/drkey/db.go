@@ -23,7 +23,7 @@ import (
 	"github.com/scionproto/scion/private/storage/db"
 )
 
-var ErrKeyNotFound = serrors.New("key not found")
+const ErrKeyNotFound serrors.StrError = "key not found"
 
 // SecretValueDB is the database for Secret Values.
 type SecretValueDB interface {

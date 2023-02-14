@@ -34,7 +34,7 @@ import (
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
-var errTimeout = serrors.New("timeout")
+const errTimeout serrors.StrError = "timeout"
 
 // RunConfig contains handles to all devices used in the acceptance test and
 // should be used to read/write from devices.

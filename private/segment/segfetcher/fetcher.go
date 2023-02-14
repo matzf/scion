@@ -34,9 +34,9 @@ const (
 )
 
 // errors for metrics classification.
-var (
-	errFetch = serrors.New("fetching failed")
-	errDB    = serrors.New("error with the db")
+const (
+	errFetch serrors.StrError = "fetching failed"
+	errDB    serrors.StrError = "error with the db"
 )
 
 // ReplyHandler handles replies.

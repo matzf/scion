@@ -17,16 +17,15 @@ package pathpol
 
 import (
 	"encoding/json"
-	"errors"
 	"strings"
 
 	"github.com/scionproto/scion/pkg/private/serrors"
 	"github.com/scionproto/scion/pkg/snet"
 )
 
-var (
+const (
 	// ErrNoDefault indicates that there is no default acl entry.
-	ErrNoDefault = errors.New("ACL does not have a default")
+	ErrNoDefault serrors.StrError = "ACL does not have a default"
 )
 
 type ACL struct {

@@ -27,7 +27,7 @@ import (
 )
 
 // ErrInvalidRequest indicates an invalid request.
-var ErrInvalidRequest = serrors.New("invalid request")
+const ErrInvalidRequest serrors.StrError = "invalid request"
 
 // Resolver resolves segments that are locally cached.
 type Resolver interface {

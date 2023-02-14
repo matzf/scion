@@ -27,13 +27,13 @@ import (
 	"github.com/scionproto/scion/pkg/scrypto/cppki"
 )
 
-var (
+const (
 	// ErrAlreadyExists indicates a file is ignored because the contents have
 	// already been loaded previously.
-	ErrAlreadyExists = serrors.New("already exists")
+	ErrAlreadyExists serrors.StrError = "already exists"
 	// ErrOutsideValidity indicates a file is ignored because the current time
 	// is outside of the certificates validity period.
-	ErrOutsideValidity = serrors.New("outside validity")
+	ErrOutsideValidity serrors.StrError = "outside validity"
 )
 
 // LoadResult indicates which files were loaded, which files were ignored.

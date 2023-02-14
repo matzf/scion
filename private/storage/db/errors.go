@@ -19,17 +19,17 @@ import (
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
-var (
+const (
 	// ErrInvalidInputData indicates invalid data was tried to input in the DB.
-	ErrInvalidInputData = serrors.New("db: input data invalid")
+	ErrInvalidInputData serrors.StrError = "db: input data invalid"
 	// ErrDataInvalid indicates invalid data is stored in the DB.
-	ErrDataInvalid = serrors.New("db: db data invalid")
+	ErrDataInvalid serrors.StrError = "db: db data invalid"
 	// ErrReadFailed indicates that reading from the DB failed.
-	ErrReadFailed = serrors.New("db: read failed")
+	ErrReadFailed serrors.StrError = "db: read failed"
 	// ErrWriteFailed indicates that writing to the DB failed.
-	ErrWriteFailed = serrors.New("db: write failed")
+	ErrWriteFailed serrors.StrError = "db: write failed"
 	// ErrTx indicates a transaction error.
-	ErrTx = serrors.New("db: transaction error")
+	ErrTx serrors.StrError = "db: transaction error"
 )
 
 func NewTxError(msg common.ErrMsg, err error, logCtx ...interface{}) error {

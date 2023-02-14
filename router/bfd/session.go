@@ -39,9 +39,9 @@ const (
 	defaultDetectionTimeout = time.Minute
 )
 
-var (
+const (
 	// AlreadyRunning is the error returned by session run function when called for twice.
-	AlreadyRunning = serrors.New("is running")
+	AlreadyRunning serrors.StrError = "is running"
 )
 
 // Session describes a BFD Version 1 (RFC 5880) Session. Only Asynchronous mode is supported.

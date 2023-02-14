@@ -34,9 +34,9 @@ import (
 	"github.com/scionproto/scion/private/trust/internal/metrics"
 )
 
-var (
-	errNotFound = serrors.New("not found")
-	errInactive = serrors.New("inactive")
+const (
+	errNotFound serrors.StrError = "not found"
+	errInactive serrors.StrError = "inactive"
 )
 
 // Fetcher fetches trust material from a remote.

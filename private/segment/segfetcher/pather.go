@@ -16,7 +16,6 @@ package segfetcher
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -34,8 +33,8 @@ import (
 )
 
 // Pather errors.
-var (
-	ErrBadDst = errors.New("bad destination AS")
+const (
+	ErrBadDst serrors.StrError = "bad destination AS"
 )
 
 // Pather is used to construct paths from the path database. If necessary, paths

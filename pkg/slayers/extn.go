@@ -22,8 +22,8 @@ import (
 	"github.com/scionproto/scion/pkg/private/serrors"
 )
 
-var (
-	ErrOptionNotFound = serrors.New("Option not found")
+const (
+	ErrOptionNotFound serrors.StrError = "Option not found"
 )
 
 // OptionType indicates the type of a TLV Option that is part of an extension header.

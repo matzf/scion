@@ -35,9 +35,9 @@ import (
 	"github.com/scionproto/scion/private/trust"
 )
 
-var (
-	errRootCert        = serrors.New("root certificate")
-	errOutsideValidity = serrors.New("outside validity")
+const (
+	errRootCert        serrors.StrError = "root certificate"
+	errOutsideValidity serrors.StrError = "outside validity"
 )
 
 type Metrics struct {

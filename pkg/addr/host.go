@@ -54,13 +54,13 @@ const (
 	HostLenSVC  = 2
 )
 
-var (
+const (
 	// ErrBadHostAddrType indicates an invalid host address type.
-	ErrBadHostAddrType = serrors.New("unsupported host address type")
+	ErrBadHostAddrType serrors.StrError = "unsupported host address type"
 	// ErrMalformedHostAddrType indicates a malformed host address type.
-	ErrMalformedHostAddrType = serrors.New("malformed host address type")
+	ErrMalformedHostAddrType serrors.StrError = "malformed host address type"
 	// ErrUnsupportedSVCAddress indicates an unsupported SVC address.
-	ErrUnsupportedSVCAddress = serrors.New("unsupported SVC address")
+	ErrUnsupportedSVCAddress serrors.StrError = "unsupported SVC address"
 )
 
 const (
